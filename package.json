@@ -1,0 +1,84 @@
+{
+  "name": "@piplup/utils",
+  "version": "3.2.5",
+  "private": false,
+  "description": "A collection of utility hooks and functions crafted to power up the packages within Piplup.",
+  "keywords": [
+    "@piplup/use-event-listener",
+    "@piplup/use-local-storage",
+    "react event listener",
+    "react localStorage",
+    "reactive localStorage",
+    "use event listener",
+    "useEventListener",
+    "useLocalStorage"
+  ],
+  "homepage": "https://www.piplupjs.com",
+  "license": "MIT",
+  "repository": {
+    "url": "git+https://github.com/piplupjs/piplup-utils.git"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ],
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "prepare": "node ./scripts/prepare.mjs",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "typecheck": "tsc --build --noEmit",
+    "build": "vite build",
+    "release": "tsx scripts/release.mts",
+    "release:dry": "tsx scripts/release.mts --dry-run"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@types/node": "^25.9.9",
+    "@types/react": "^19.2.14",
+    "@types/semver": "^7.7.1",
+    "@types/yargs": "^17.0.35",
+    "husky": "^9.1.7",
+    "oxfmt": "^0.66.0",
+    "oxlint": "^1.88.0",
+    "react": "^19.2.0",
+    "semver": "^7.8.5",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.12",
+    "vite-plugin-dts": "^5.0.0",
+    "yargs": "^18.2.0"
+  },
+  "peerDependencies": {
+    "@types/react": "^18.2.0 || ^19.0.0",
+    "react": "^18.2.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@types/react": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

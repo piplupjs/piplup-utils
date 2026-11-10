@@ -1,0 +1,92 @@
+name: PR checks
+
+# Nothing from a pull request runs until a maintainer approves it:
+# - Branches in this repo (Renovate's and maintainers') run when a maintainer adds the
+#   `run-checks` label. A new push removes the label, so every commit needs approval.
+# - Pull requests from forks use GitHub's own approval for outside contributors, shown in the PR.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled]
+
+# A new push cancels the run for the previous commit. Other labels get their own group, so adding
+# one doesn't cancel running checks.
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}-${{ github.event.action == 'labeled' && github.event.label.name != 'run-checks' && github.run_id || 'checks' }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  awaiting-approval:
+    if: github.event.action != 'labeled' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      statuses: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR: ${{ github.event.pull_request.number }}
+      SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Remove the approval from the previous commit
+        if: contains(github.event.pull_request.labels.*.name, 'run-checks')
+        run: gh pr edit "$PR" -R "$GITHUB_REPOSITORY" --remove-label run-checks
+
+      - name: Ask for approval
+        run: >
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA"
+          -f state=pending -f context="PR checks"
+          -f description="Waiting for a maintainer to add the run-checks label"
+
+  checks:
+    if: >-
+      (github.event.action == 'labeled' && github.event.label.name == 'run-checks') ||
+      (github.event.action != 'labeled' && github.event.pull_request.head.repo.full_name != github.repository)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SHA: ${{ github.event.pull_request.head.sha }}
+      # Pull requests from forks get a read-only token, so they can't set commit statuses
+      SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    steps:
+      - name: Report checks as running
+        if: env.SAME_REPO == 'true'
+        run: >
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA"
+          -f state=pending -f context="PR checks" -f description="Running"
+          -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Build
+        run: npm run build
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Report the result
+        if: always() && env.SAME_REPO == 'true'
+        run: >
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA"
+          -f state=${{ job.status == 'success' && 'success' || job.status == 'cancelled' && 'error' || 'failure' }}
+          -f context="PR checks"
+          -f description="${{ job.status == 'success' && 'All checks passed' || job.status == 'cancelled' && 'Cancelled' || 'Checks failed' }}"
+          -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

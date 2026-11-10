@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  // tsconfig for the /scripts directory.
+  // Scripts run directly via `tsx` so we disable emit.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./scripts",
+    "outDir": "./scripts/dist",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true,
+    // Scripts don't need composite/incremental since they're not referenced
+    "composite": false,
+    "incremental": false,
+    "types": ["node"]
+  },
+  "include": ["scripts/**/*.ts", "scripts/**/*.mts", "scripts/**/*.mjs"]
+}
