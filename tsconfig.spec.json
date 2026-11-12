@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  // tsconfig for the Vitest specs and config. Type-checked only, never emitted.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "./dist/out-tsc-spec",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "composite": false,
+    "incremental": false,
+    "exactOptionalPropertyTypes": false,
+    "types": ["node"]
+  },
+  "files": [],
+  "include": ["src/**/*.spec.ts", "src/**/*.spec.tsx", "vitest.config.mts"]
+}

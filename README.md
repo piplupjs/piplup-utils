@@ -35,6 +35,7 @@ pnpm add @piplup/utils
   - [setRef](https://github.com/piplupjs/piplup-utils/blob/main/src/helpers/set-ref.ts)
   - [forkRef](https://github.com/piplupjs/piplup-utils/blob/main/src/helpers/fork-ref.ts)
 - [Hooks](#hooks)
+  - [useCountdown](https://github.com/piplupjs/piplup-utils/blob/main/src/hooks/use-countdown.ts)
   - [useEventCallback](https://github.com/piplupjs/piplup-utils/blob/main/src/hooks/use-event-callback.ts)
   - [useEventListener](https://github.com/piplupjs/piplup-utils/blob/main/src/hooks/use-event-listener.ts)
   - [useForkRef](https://github.com/piplupjs/piplup-utils/blob/main/src/hooks/use-fork-ref.ts)
@@ -145,6 +146,45 @@ export default TextFieldInput;
 ```
 
 ## Hooks
+
+### useCountdown
+
+A countdown that doesn't re-render the component that owns it. `useCountdown`
+returns a controller; `useCountdownValue` subscribes to just the value a
+component shows. `createCountdown` is the same countdown without React.
+
+#### Example
+
+```tsx
+import { useCountdown, useCountdownValue } from '@piplup/utils';
+import type { Countdown } from '@piplup/utils';
+
+const ResendButton = ({ onResend }: { onResend: () => void }) => {
+  const countdown = useCountdown({ from: 30, autoStart: true });
+  // Re-renders once, when the countdown finishes.
+  const canResend = useCountdownValue(
+    countdown,
+    (s) => s.status === 'finished',
+  );
+
+  return (
+    <button
+      disabled={!canResend}
+      onClick={() => {
+        onResend();
+        countdown.restart();
+      }}
+    >
+      Resend code {!canResend && <Remaining countdown={countdown} />}
+    </button>
+  );
+};
+
+// Re-renders every second.
+const Remaining = ({ countdown }: { countdown: Countdown }) => (
+  <>in {useCountdownValue(countdown)}s</>
+);
+```
 
 ### useEventCallback
 
