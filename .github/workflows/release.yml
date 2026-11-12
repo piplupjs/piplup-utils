@@ -54,7 +54,7 @@ jobs:
         run: >
           npm run release --
           --bump ${{ inputs.bump }}
-          --no-tests
+          --tests
           ${{ inputs.changelog && '--changelog' || '--no-changelog' }}
           ${{ inputs.dry-run && '--dry-run' || '--push' }}
 

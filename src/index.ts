@@ -6,6 +6,15 @@ export { hasOwnProperty } from './helpers/has-own-property';
 export { setRef } from './helpers/set-ref';
 
 // Hooks
+export { createCountdown, useCountdown, useCountdownValue } from './hooks/use-countdown';
+export type {
+  Countdown,
+  CountdownOptions,
+  CountdownState,
+  CountdownStatus,
+  CountdownStore,
+  UseCountdownOptions,
+} from './hooks/use-countdown';
 export { useEventCallback } from './hooks/use-event-callback';
 export { useEventListener } from './hooks/use-event-listener';
 export { useForkRef } from './hooks/use-fork-ref';
