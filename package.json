@@ -1,6 +1,6 @@
 {
   "name": "@piplup/utils",
-  "version": "3.2.5",
+  "version": "3.3.0",
   "private": false,
   "description": "A collection of utility hooks and functions crafted to power up the packages within Piplup.",
   "keywords": [

@@ -1,3 +1,9 @@
+## 3.3.0 (2026-11-12)
+
+- feat(utils): add useMediaQuery, usePrefersReducedMotion, useTimeout and useId (1fd0bb9)
+- docs: link the docs site from READMEs and npm metadata (74496d3)
+- chore: initial commit (796e92e)
+
 ## 3.2.5 (2026-10-16)
 
 ### 🩹 Fixes
