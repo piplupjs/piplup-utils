@@ -1,3 +1,7 @@
+## 3.4.0 (2026-11-12)
+
+- feat(utils): add useCountdown, useCountdownValue and createCountdown (3ce8cfe)
+
 ## 3.3.0 (2026-11-12)
 
 - feat(utils): add useMediaQuery, usePrefersReducedMotion, useTimeout and useId (1fd0bb9)
