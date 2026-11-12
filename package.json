@@ -13,7 +13,7 @@
     "useEventListener",
     "useLocalStorage"
   ],
-  "homepage": "https://www.piplupjs.com",
+  "homepage": "https://www.piplupjs.com/docs/utils/installation",
   "license": "MIT",
   "repository": {
     "url": "git+https://github.com/piplupjs/piplup-utils.git"
