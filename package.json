@@ -6,12 +6,18 @@
   "keywords": [
     "@piplup/use-event-listener",
     "@piplup/use-local-storage",
+    "prefers-reduced-motion",
     "react event listener",
     "react localStorage",
+    "react media query",
     "reactive localStorage",
     "use event listener",
     "useEventListener",
-    "useLocalStorage"
+    "useId",
+    "useLocalStorage",
+    "useMediaQuery",
+    "usePrefersReducedMotion",
+    "useTimeout"
   ],
   "homepage": "https://www.piplupjs.com/docs/utils/installation",
   "license": "MIT",

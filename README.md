@@ -38,8 +38,12 @@ pnpm add @piplup/utils
   - [useEventCallback](https://github.com/piplupjs/piplup-utils/blob/main/src/hooks/use-event-callback.ts)
   - [useEventListener](https://github.com/piplupjs/piplup-utils/blob/main/src/hooks/use-event-listener.ts)
   - [useForkRef](https://github.com/piplupjs/piplup-utils/blob/main/src/hooks/use-fork-ref.ts)
+  - [useId](https://github.com/piplupjs/piplup-utils/blob/main/src/hooks/use-id.ts)
   - [useIsomorphicEffect](https://github.com/piplupjs/piplup-utils/blob/main/src/hooks/use-isomorphic-effect.ts)
   - [useLocalStorage](https://github.com/piplupjs/piplup-utils/blob/main/src/hooks/use-local-storage.ts)
+  - [useMediaQuery](https://github.com/piplupjs/piplup-utils/blob/main/src/hooks/use-media-query.ts)
+  - [usePrefersReducedMotion](https://github.com/piplupjs/piplup-utils/blob/main/src/hooks/use-prefers-reduced-motion.ts)
+  - [useTimeout](https://github.com/piplupjs/piplup-utils/blob/main/src/hooks/use-timeout.ts)
 
 ## Helpers
 
@@ -198,6 +202,28 @@ const MyComponent = () => {
 };
 ```
 
+### useId
+
+Returns the `id` prop when one is passed, otherwise a unique ID from React's
+`useId`.
+
+#### Example
+
+```tsx
+import { useId } from '@piplup/utils';
+
+const Field = ({ id, label }: { id?: string; label: string }) => {
+  const inputId = useId(id);
+
+  return (
+    <>
+      <label htmlFor={inputId}>{label}</label>
+      <input id={inputId} />
+    </>
+  );
+};
+```
+
 ### useIsomorphicEffect
 
 A hook that uses `useLayoutEffect` on the client side and `useEffect` on the
@@ -238,5 +264,55 @@ const MyComponent = () => {
       <button onClick={() => removeItem('myKey')}>Remove Value</button>
     </div>
   );
+};
+```
+
+### useMediaQuery
+
+Subscribes to a CSS media query and re-renders when it starts or stops matching.
+`matchesQuery` reads a query once, for use in effects and callbacks.
+
+#### Example
+
+```tsx
+import { useMediaQuery } from '@piplup/utils';
+
+const MyComponent = () => {
+  const isWide = useMediaQuery('(min-width: 900px)');
+
+  return <div>{isWide ? 'Wide layout' : 'Narrow layout'}</div>;
+};
+```
+
+### usePrefersReducedMotion
+
+Whether the user asked the OS to reduce motion. `prefersReducedMotion` reads the
+setting once, for use right before starting an animation.
+
+#### Example
+
+```tsx
+import { usePrefersReducedMotion } from '@piplup/utils';
+
+const Banner = () => {
+  const reduceMotion = usePrefersReducedMotion();
+
+  return <div className={reduceMotion ? undefined : 'slide-in'}>Welcome</div>;
+};
+```
+
+### useTimeout
+
+Calls a callback once after a delay. Pass `null` as the delay to cancel it.
+
+#### Example
+
+```tsx
+import { useTimeout } from '@piplup/utils';
+
+const Toast = ({ onClose }: { onClose: () => void }) => {
+  useTimeout(onClose, 5000);
+
+  return <div role="status">Saved</div>;
 };
 ```
