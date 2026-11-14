@@ -1,5 +1,7 @@
 import * as React from 'react';
 
+import { useIsomorphicEffect } from './use-isomorphic-effect';
+
 export function useEventListener<EventName extends keyof MediaQueryListEventMap>(
   eventName: EventName,
   handler: (event: MediaQueryListEventMap[EventName]) => void,
@@ -60,7 +62,10 @@ export function useEventListener<
   options?: AddEventListenerOptions | boolean,
 ) {
   const eventHandler = React.useRef(handler);
-  eventHandler.current = handler;
+
+  useIsomorphicEffect(() => {
+    eventHandler.current = handler;
+  }, [handler]);
 
   React.useEffect(() => {
     const eventElement: EventElement | Window = element?.current ?? window;
