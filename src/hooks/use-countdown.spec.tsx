@@ -1,8 +1,11 @@
-import { act, cleanup, render, screen } from '@testing-library/react';
 import * as React from 'react';
+
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Countdown, CountdownState } from './use-countdown';
+
 import { createCountdown, useCountdown, useCountdownValue } from './use-countdown';
+
+import type { Countdown, CountdownState } from './use-countdown';
 
 const T0 = new Date('2026-01-01T00:00:00Z').getTime();
 
@@ -54,7 +57,7 @@ describe('createCountdown', () => {
   });
 
   it('counts up when `from` is below `to`', () => {
-    const countdown = createCountdown({ from: 0, to: 2, interval: 100 });
+    const countdown = createCountdown({ from: 0, interval: 100, to: 2 });
     const states = record(countdown);
 
     countdown.start();
@@ -325,7 +328,7 @@ describe('useCountdown and useCountdownValue', () => {
 
     function Form() {
       renders.form += 1;
-      const countdown = useCountdown({ from: 3, autoStart: true });
+      const countdown = useCountdown({ autoStart: true, from: 3 });
       const isDone = useCountdownValue(countdown, (state) => state.status === 'finished');
 
       return (
@@ -379,7 +382,7 @@ describe('useCountdown and useCountdownValue', () => {
     const second = vi.fn();
 
     function Probe({ onComplete }: { onComplete: () => void }) {
-      useCountdown({ from: 1, autoStart: true, onComplete });
+      useCountdown({ autoStart: true, from: 1, onComplete });
 
       return null;
     }
@@ -398,7 +401,7 @@ describe('useCountdown and useCountdownValue', () => {
     const onComplete = vi.fn();
 
     function Probe() {
-      useCountdown({ from: 2, autoStart: true, onComplete });
+      useCountdown({ autoStart: true, from: 2, onComplete });
 
       return null;
     }
@@ -417,7 +420,7 @@ describe('useCountdown and useCountdownValue', () => {
     const onComplete = vi.fn();
 
     function Probe() {
-      const countdown = useCountdown({ from: 3, autoStart: true, onComplete });
+      const countdown = useCountdown({ autoStart: true, from: 3, onComplete });
 
       return <span data-testid="count">{useCountdownValue(countdown)}</span>;
     }
@@ -446,7 +449,7 @@ describe('useCountdown and useCountdownValue', () => {
 
   it('pauses its timer while hidden by <Activity> and catches up when shown', () => {
     function Probe() {
-      const countdown = useCountdown({ from: 10, autoStart: true });
+      const countdown = useCountdown({ autoStart: true, from: 10 });
 
       return <span data-testid="count">{useCountdownValue(countdown)}</span>;
     }
@@ -518,7 +521,7 @@ describe('useCountdown and useCountdownValue', () => {
     const { renderToString } = await import('react-dom/server');
 
     function Probe() {
-      const countdown = useCountdown({ from: 30, autoStart: true, startedAt: T0 - 5000 });
+      const countdown = useCountdown({ autoStart: true, from: 30, startedAt: T0 - 5000 });
 
       return <span>{useCountdownValue(countdown)}</span>;
     }

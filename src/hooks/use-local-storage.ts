@@ -1,4 +1,5 @@
 import * as React from 'react';
+
 import { useEventListener } from './use-event-listener';
 
 export function getItem(key: string): null | string {
@@ -41,6 +42,8 @@ export function useLocalStorage(key: string, initialValue: null | string = null)
 
   // Effects
   React.useEffect(() => {
+    // Reads the stored value again when the key changes.
+    // eslint-disable-next-line react/set-state-in-effect -- localStorage is outside React
     handleStorageChange();
   }, [handleStorageChange]);
 

@@ -48,7 +48,7 @@ export interface UseMediaQueryOptions {
    * Resolves the query on the server, for example from the request's user agent.
    * @default null
    */
-  ssrMatchMedia?: SsrMatchMedia | null | undefined;
+  ssrMatchMedia?: null | SsrMatchMedia | undefined;
 }
 
 // Module-level so its identity is stable across renders; a per-render `bind` would make

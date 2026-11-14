@@ -22,6 +22,7 @@
 // SOFTWARE.
 
 import * as React from 'react';
+
 import { forkRef } from '../helpers/fork-ref';
 
 /**
