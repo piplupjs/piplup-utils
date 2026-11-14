@@ -23,6 +23,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
+
 import semver from 'semver';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -32,14 +33,14 @@ import { hideBin } from 'yargs/helpers';
 const useColor = process.stdout.isTTY !== false;
 
 const c = {
-  reset: (s: string) => (useColor ? `\x1b[0m${s}\x1b[0m` : s),
   bold: (s: string) => (useColor ? `\x1b[1m${s}\x1b[0m` : s),
-  dim: (s: string) => (useColor ? `\x1b[2m${s}\x1b[0m` : s),
-  red: (s: string) => (useColor ? `\x1b[31m${s}\x1b[0m` : s),
-  green: (s: string) => (useColor ? `\x1b[32m${s}\x1b[0m` : s),
-  yellow: (s: string) => (useColor ? `\x1b[33m${s}\x1b[0m` : s),
   cyan: (s: string) => (useColor ? `\x1b[36m${s}\x1b[0m` : s),
+  dim: (s: string) => (useColor ? `\x1b[2m${s}\x1b[0m` : s),
+  green: (s: string) => (useColor ? `\x1b[32m${s}\x1b[0m` : s),
+  red: (s: string) => (useColor ? `\x1b[31m${s}\x1b[0m` : s),
+  reset: (s: string) => (useColor ? `\x1b[0m${s}\x1b[0m` : s),
   white: (s: string) => (useColor ? `\x1b[37m${s}\x1b[0m` : s),
+  yellow: (s: string) => (useColor ? `\x1b[33m${s}\x1b[0m` : s),
 };
 
 /** Colorize a unified diff string line-by-line. */
@@ -47,11 +48,21 @@ function colorizeDiff(diff: string): string {
   return diff
     .split('\n')
     .map((line) => {
-      if (line.startsWith('+++') || line.startsWith('---')) return c.bold(c.white(line));
-      if (line.startsWith('@@')) return c.cyan(line);
-      if (line.startsWith('diff ') || line.startsWith('index ')) return c.dim(line);
-      if (line.startsWith('+')) return c.green(line);
-      if (line.startsWith('-')) return c.red(line);
+      if (line.startsWith('+++') || line.startsWith('---')) {
+        return c.bold(c.white(line));
+      }
+      if (line.startsWith('@@')) {
+        return c.cyan(line);
+      }
+      if (line.startsWith('diff ') || line.startsWith('index ')) {
+        return c.dim(line);
+      }
+      if (line.startsWith('+')) {
+        return c.green(line);
+      }
+      if (line.startsWith('-')) {
+        return c.red(line);
+      }
       return line;
     })
     .join('\n');
@@ -61,35 +72,35 @@ function colorizeDiff(diff: string): string {
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
-const PACKAGES: ReadonlyArray<{ name: string; dir: string }> = [
+const PACKAGES: ReadonlyArray<{ dir: string; name: string }> = [
   // Single-package repo: the publishable package is the repo root.
-  { name: '@piplup/utils', dir: ROOT },
+  { dir: ROOT, name: '@piplup/utils' },
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type VersionBump = 'patch' | 'minor' | 'major';
+type VersionBump = 'major' | 'minor' | 'patch';
 
 interface Answers {
+  createChangelog: boolean;
   runTests: boolean;
   versionBump: VersionBump;
-  createChangelog: boolean;
 }
 
 interface ReleaseState {
-  filesModified: boolean;
   committed: boolean;
+  filesModified: boolean;
   tagged: boolean;
   tagName: string;
 }
 
 type PackageJson = {
-  name: string;
-  version: string;
+  [key: string]: unknown;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
+  name: string;
   peerDependencies?: Record<string, string>;
-  [key: string]: unknown;
+  version: string;
 };
 
 // ─── Shell Helpers ────────────────────────────────────────────────────────────
@@ -120,7 +131,9 @@ function step(msg: string): void {
 // ─── Interactive Prompt Helpers ───────────────────────────────────────────────
 
 function question(rl: readline.Interface, prompt: string): Promise<string> {
-  return new Promise((resolve) => rl.question(prompt, resolve));
+  return new Promise((resolve) => {
+    rl.question(prompt, resolve);
+  });
 }
 
 async function selectChoice<T extends string>(
@@ -132,6 +145,7 @@ async function selectChoice<T extends string>(
   choices.forEach((c, i) => console.log(`    ${i + 1}) ${c.label}`));
 
   while (true) {
+    // eslint-disable-next-line no-await-in-loop -- asks again until the answer is valid
     const raw = await question(rl, `\n  Enter choice (1–${choices.length}): `);
     const n = parseInt(raw.trim(), 10);
     if (Number.isInteger(n) && n >= 1 && n <= choices.length) {
@@ -158,7 +172,7 @@ function readPkg(dir: string): PackageJson {
 }
 
 function writePkg(dir: string, pkg: PackageJson): void {
-  fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2) + '\n');
+  fs.writeFileSync(path.join(dir, 'package.json'), `${JSON.stringify(pkg, null, 2)}\n`);
 }
 
 /**
@@ -170,15 +184,21 @@ function applyVersionBumps(
   deps: Record<string, string> | undefined,
   releases: Map<string, string>,
 ): Record<string, string> | undefined {
-  if (!deps) return undefined;
+  if (!deps) {
+    return undefined;
+  }
 
   let changed = false;
   const result: Record<string, string> = { ...deps };
 
   for (const [pkg, current] of Object.entries(result)) {
-    if (!releases.has(pkg)) continue;
+    if (!releases.has(pkg)) {
+      continue;
+    }
     // Never touch file: workspace links — they resolve locally
-    if (current.startsWith('file:')) continue;
+    if (current.startsWith('file:')) {
+      continue;
+    }
 
     const newVer = releases.get(pkg)!;
     // Preserve range prefix: everything before the first digit
@@ -195,7 +215,7 @@ function applyVersionBumps(
 }
 
 /** Latest version of a package on npm, or `null` if it has never been published. */
-function getPublishedVersion(name: string): string | null {
+function getPublishedVersion(name: string): null | string {
   try {
     return run(`npm view ${name} version`) || null;
   } catch {
@@ -235,7 +255,7 @@ async function phasePrompt(preset: {
 
     const createChangelog = await selectYesNo(rl, 'Update CHANGELOG.md?');
 
-    return { runTests, versionBump, createChangelog };
+    return { createChangelog, runTests, versionBump };
   } finally {
     rl.close();
   }
@@ -250,13 +270,11 @@ async function phasePrepare(answers: Answers): Promise<void> {
   const dirty = run('git status --porcelain');
   if (dirty) {
     console.error(
-      '\n' +
-        c.red(
-          c.bold('  ✗ Working tree is not clean. Commit or stash your changes before releasing.'),
-        ) +
-        '\n',
+      `\n${c.red(
+        c.bold('  ✗ Working tree is not clean. Commit or stash your changes before releasing.'),
+      )}\n`,
     );
-    console.error(c.dim(dirty) + '\n');
+    console.error(`${c.dim(dirty)}\n`);
     process.exit(1);
   }
   step('Working tree is clean.');
@@ -310,9 +328,15 @@ async function phaseVersion(answers: Answers): Promise<string> {
     const deps = applyVersionBumps(pkgJson.dependencies, releases);
     const devDeps = applyVersionBumps(pkgJson.devDependencies, releases);
     const peerDeps = applyVersionBumps(pkgJson.peerDependencies, releases);
-    if (deps !== undefined) pkgJson.dependencies = deps;
-    if (devDeps !== undefined) pkgJson.devDependencies = devDeps;
-    if (peerDeps !== undefined) pkgJson.peerDependencies = peerDeps;
+    if (deps !== undefined) {
+      pkgJson.dependencies = deps;
+    }
+    if (devDeps !== undefined) {
+      pkgJson.devDependencies = devDeps;
+    }
+    if (peerDeps !== undefined) {
+      pkgJson.peerDependencies = peerDeps;
+    }
     writePkg(pkg.dir, pkgJson);
     step(`Updated ${pkg.name}`);
   }
@@ -323,12 +347,12 @@ async function phaseVersion(answers: Answers): Promise<string> {
   // Show a readable summary + focused diff so the user can review changes
   const stat = run('git diff --stat');
   if (stat) {
-    console.log('\n' + c.bold(stat));
+    console.log(`\n${c.bold(stat)}`);
   }
   const pkgPaths = PACKAGES.map((p) => path.relative(ROOT, path.join(p.dir, 'package.json')));
   const pkgDiff = run(`git diff -- ${pkgPaths.join(' ')}`);
   if (pkgDiff) {
-    console.log('\n' + colorizeDiff(pkgDiff) + '\n');
+    console.log(`\n${colorizeDiff(pkgDiff)}\n`);
   }
 
   return newVersion;
@@ -421,8 +445,8 @@ async function phaseRollback(state: ReleaseState, reason: 'dry-run' | 'error'): 
     try {
       run(`git tag -d ${state.tagName}`);
       step(`Deleted tag: ${c.yellow(state.tagName)}`);
-    } catch (e) {
-      step(c.yellow(`Warning: could not delete tag ${state.tagName} — ${e}`));
+    } catch (error) {
+      step(c.yellow(`Warning: could not delete tag ${state.tagName} — ${error}`));
     }
     state.tagged = false;
   }
@@ -434,8 +458,8 @@ async function phaseRollback(state: ReleaseState, reason: 'dry-run' | 'error'): 
       step(c.yellow('Reverted commit (git reset --hard HEAD~1).'));
       state.committed = false;
       state.filesModified = false;
-    } catch (e) {
-      step(c.yellow(`Warning: could not revert commit — ${e}`));
+    } catch (error) {
+      step(c.yellow(`Warning: could not revert commit — ${error}`));
     }
     return;
   }
@@ -451,8 +475,8 @@ async function phaseRollback(state: ReleaseState, reason: 'dry-run' | 'error'): 
       run(`git checkout HEAD -- ${filesToRestore}`);
       step(c.yellow('Reverted file changes via git checkout.'));
       state.filesModified = false;
-    } catch (e) {
-      step(c.yellow(`Warning: could not revert file changes — ${e}`));
+    } catch (error) {
+      step(c.yellow(`Warning: could not revert file changes — ${error}`));
     }
     return;
   }
@@ -468,27 +492,27 @@ async function main(): Promise<void> {
     .usage('Usage: $0 [options]')
     .option('dry-run', {
       alias: 'd',
-      type: 'boolean',
       default: false,
       description:
         'Simulate the full release without publishing to npm. All changes are reverted at the end.',
+      type: 'boolean',
     })
     .option('bump', {
       choices: ['patch', 'minor', 'major'] as const,
       description: 'Version bump type (skips the prompt).',
     })
     .option('tests', {
-      type: 'boolean',
       description: 'Run tests before releasing (skips the prompt). Use --no-tests to skip them.',
+      type: 'boolean',
     })
     .option('changelog', {
-      type: 'boolean',
       description: 'Update CHANGELOG.md (skips the prompt). Use --no-changelog to skip it.',
+      type: 'boolean',
     })
     .option('push', {
-      type: 'boolean',
       default: false,
       description: 'Push the release commit and tag after publishing.',
+      type: 'boolean',
     })
     .help()
     .alias('h', 'help')
@@ -497,24 +521,22 @@ async function main(): Promise<void> {
 
   const dryRun = argv['dry-run'] as boolean;
   const preset: { [K in keyof Answers]?: Answers[K] | undefined } = {
+    createChangelog: argv.changelog,
     runTests: argv.tests,
     versionBump: argv.bump,
-    createChangelog: argv.changelog,
   };
 
   if (dryRun) {
     console.log(
-      '\n' +
-        c.yellow(
-          c.bold('  ⚠  DRY RUN — packages will NOT be published; all changes will be reverted.'),
-        ) +
-        '\n',
+      `\n${c.yellow(
+        c.bold('  ⚠  DRY RUN — packages will NOT be published; all changes will be reverted.'),
+      )}\n`,
     );
   }
 
   const state: ReleaseState = {
-    filesModified: false,
     committed: false,
+    filesModified: false,
     tagged: false,
     tagName: '',
   };
@@ -546,13 +568,13 @@ async function main(): Promise<void> {
       await phaseRollback(state, 'dry-run');
       logPhase('DRY RUN COMPLETE');
       console.log(
-        c.green('  Simulation finished successfully. Run without --dry-run to publish.') + '\n',
+        `${c.green('  Simulation finished successfully. Run without --dry-run to publish.')}\n`,
       );
     } else {
       logPhase('RELEASE COMPLETE');
       console.log(c.green(c.bold(`  v${newVersion} has been published to npm!`)));
       if (!argv.push) {
-        console.log(c.dim('  Remember to push: git push && git push --tags') + '\n');
+        console.log(`${c.dim('  Remember to push: git push && git push --tags')}\n`);
         return;
       }
       // The packages are already on npm, so a failed push must not roll back the release commit.
@@ -560,14 +582,14 @@ async function main(): Promise<void> {
         await phasePush(state);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        console.error('\n' + c.red(c.bold(`  ✗ Push failed: ${message}`)));
-        console.error(c.dim(`  Push the release commit and ${state.tagName} manually.`) + '\n');
+        console.error(`\n${c.red(c.bold(`  ✗ Push failed: ${message}`))}`);
+        console.error(`${c.dim(`  Push the release commit and ${state.tagName} manually.`)}\n`);
         process.exit(1);
       }
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error('\n' + c.red(c.bold(`  ✗ Release failed: ${message}`)) + '\n');
+    console.error(`\n${c.red(c.bold(`  ✗ Release failed: ${message}`))}\n`);
 
     if (state.filesModified || state.committed || state.tagged) {
       await phaseRollback(state, 'error');

@@ -1,4 +1,5 @@
 import * as React from 'react';
+
 import { useIsomorphicEffect } from './use-isomorphic-effect';
 
 export type CountdownStatus = 'finished' | 'idle' | 'paused' | 'running';
@@ -12,18 +13,18 @@ export interface CountdownState {
 export interface CountdownOptions {
   /** Value to count from. */
   from: number;
-  /** Value to count to. Counts down when `from > to`, up when `from < to`. @default 0 */
-  to?: number | undefined;
   /** Milliseconds per step. @default 1000 */
   interval?: number | undefined;
+  /** Called once when the count reaches `to`. The latest function passed is called. */
+  onComplete?: (() => void) | undefined;
   /**
    * Epoch milliseconds the countdown really started at, for example when a one-time code was sent.
    * The next start after this value changes counts from it instead of from now, so time that has
    * already passed is skipped.
    */
   startedAt?: number | undefined;
-  /** Called once when the count reaches `to`. The latest function passed is called. */
-  onComplete?: (() => void) | undefined;
+  /** Value to count to. Counts down when `from > to`, up when `from < to`. @default 0 */
+  to?: number | undefined;
 }
 
 export interface UseCountdownOptions extends CountdownOptions {
@@ -35,16 +36,16 @@ export interface UseCountdownOptions extends CountdownOptions {
 export interface Countdown {
   /** The current state. Changes identity only when `count` or `status` changes. */
   getState: () => CountdownState;
-  /** Calls `listener` whenever `count` or `status` changes. Returns an unsubscribe function. */
-  subscribe: (listener: (state: CountdownState) => void) => () => void;
-  /** Starts from `from` when idle or finished, resumes when paused. Does nothing while running. */
-  start: () => void;
   /** Pauses a running countdown. */
   pause: () => void;
   /** Stops and goes back to `from`, idle. */
   reset: () => void;
   /** Starts again from `from`, counting from now, in a single update. */
   restart: () => void;
+  /** Starts from `from` when idle or finished, resumes when paused. Does nothing while running. */
+  start: () => void;
+  /** Calls `listener` whenever `count` or `status` changes. Returns an unsubscribe function. */
+  subscribe: (listener: (state: CountdownState) => void) => () => void;
 }
 
 /** A countdown that works without React. `useCountdown` creates one for you. */
@@ -54,10 +55,10 @@ export interface CountdownStore extends Countdown {
 }
 
 interface Run {
-  from: number;
-  to: number;
-  interval: number;
   direction: number;
+  from: number;
+  interval: number;
+  to: number;
   totalSteps: number;
 }
 
@@ -224,10 +225,10 @@ export function createCountdown(initialOptions: CountdownOptions): CountdownStor
     const from = options.from;
     const to = options.to ?? 0;
     const current: Run = {
-      from,
-      to,
-      interval: options.interval ?? 1000,
       direction: Math.sign(to - from),
+      from,
+      interval: options.interval ?? 1000,
+      to,
       totalSteps: Math.ceil(Math.abs(to - from)),
     };
     const now = Date.now();
@@ -260,32 +261,6 @@ export function createCountdown(initialOptions: CountdownOptions): CountdownStor
 
   const store: CountdownStore = {
     getState: () => state,
-
-    subscribe: (listener) => {
-      listeners.add(listener);
-
-      return () => {
-        listeners.delete(listener);
-      };
-    },
-
-    start: () => {
-      if (state.status === 'running') {
-        return;
-      }
-
-      if (state.status === 'paused' && run !== null) {
-        const current = run;
-        anchor = Date.now() - pausedElapsed;
-        setState(state.count, 'running');
-        notify();
-        schedule(current, pausedElapsed);
-
-        return;
-      }
-
-      begin(true);
-    },
 
     pause: () => {
       if (state.status !== 'running' || run === null) {
@@ -327,6 +302,32 @@ export function createCountdown(initialOptions: CountdownOptions): CountdownStor
       if (state.status === 'idle' && setState(nextOptions.from, 'idle')) {
         notify();
       }
+    },
+
+    start: () => {
+      if (state.status === 'running') {
+        return;
+      }
+
+      if (state.status === 'paused' && run !== null) {
+        const current = run;
+        anchor = Date.now() - pausedElapsed;
+        setState(state.count, 'running');
+        notify();
+        schedule(current, pausedElapsed);
+
+        return;
+      }
+
+      begin(true);
+    },
+
+    subscribe: (listener) => {
+      listeners.add(listener);
+
+      return () => {
+        listeners.delete(listener);
+      };
     },
   };
 

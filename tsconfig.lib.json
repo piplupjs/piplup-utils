@@ -9,11 +9,6 @@
     "esModuleInterop": true,
     "types": ["node", "vite/client"]
   },
-  "exclude": [
-    "src/**/*.spec.ts",
-    "src/**/*.spec.tsx",
-    "src/**/*.spec.js",
-    "src/**/*.spec.jsx"
-  ],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.spec.tsx", "src/**/*.spec.js", "src/**/*.spec.jsx"],
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"]
 }

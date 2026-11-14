@@ -22,6 +22,7 @@
 // SOFTWARE.
 
 import * as React from 'react';
+
 import { useIsomorphicEffect } from './use-isomorphic-effect';
 
 export function useEventCallback<Args extends unknown[], Return>(
