@@ -64,6 +64,7 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
+    "@piplup/code-infra": "^2.0.2",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^25.9.9",
     "@types/react": "^19.2.14",
@@ -72,8 +73,8 @@
     "@types/yargs": "^17.0.35",
     "husky": "^9.1.7",
     "jsdom": "^31.0.0",
-    "oxfmt": "^0.66.0",
-    "oxlint": "^1.88.0",
+    "oxfmt": "^0.75.0",
+    "oxlint": "^1.93.0",
     "react": "^19.2.0",
     "react-dom": "^19.3.1",
     "semver": "^7.8.5",
